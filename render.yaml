@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: talentfilter
+    runtime: node
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false          # paste your URI in the Render dashboard
+      - key: OPENROUTER_API_KEY
+        sync: false          # paste your key in the Render dashboard
+      - key: JWT_SECRET
+        sync: false          # paste your random secret string
