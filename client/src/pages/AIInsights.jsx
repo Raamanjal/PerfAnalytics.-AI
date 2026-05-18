@@ -1,10 +1,12 @@
 import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { BrainCircuit, Sparkles } from 'lucide-react';
+import { BrainCircuit, Sparkles, UserCheck } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 const AIInsights = () => {
   const [employees, setEmployees] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('all');
   const [insight, setInsight] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,11 +32,20 @@ const AIInsights = () => {
       return;
     }
 
+    const employeesToAnalyze = selectedEmployeeId === 'all' 
+      ? employees 
+      : employees.filter(e => e._id === selectedEmployeeId);
+
+    if (employeesToAnalyze.length === 0) {
+      setError('Selected employee not found.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     
     try {
-      const res = await axios.post('/api/ai/recommend', { employees }, {
+      const res = await axios.post('/api/ai/recommend', { employees: employeesToAnalyze }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setInsight(res.data.recommendation);
@@ -58,22 +69,40 @@ const AIInsights = () => {
               Generate intelligent promotion recommendations, training suggestions, and feedback based on your team's performance metrics and skills.
             </p>
           </div>
-          <button 
-            onClick={generateInsights}
-            disabled={loading || employees.length === 0}
-            className="flex-shrink-0 flex items-center gap-2 bg-white text-indigo-600 font-bold px-6 py-3 rounded-lg shadow hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
-                Analyzing Data...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5" /> Generate Insights
-              </span>
-            )}
-          </button>
+          
+          <div className="flex flex-col gap-4 bg-white/10 p-4 rounded-xl border border-white/20">
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-indigo-100" />
+              <label className="text-sm font-medium text-indigo-50">Select Target:</label>
+              <select 
+                value={selectedEmployeeId}
+                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                className="ml-2 bg-indigo-700 border border-indigo-500 text-white text-sm rounded-lg focus:ring-white focus:border-white p-2 outline-none"
+              >
+                <option value="all">Entire Team (All Users)</option>
+                {employees.map(emp => (
+                  <option key={emp._id} value={emp._id}>{emp.name} ({emp.department})</option>
+                ))}
+              </select>
+            </div>
+
+            <button 
+              onClick={generateInsights}
+              disabled={loading || employees.length === 0}
+              className="w-full flex justify-center items-center gap-2 bg-white text-indigo-600 font-bold px-6 py-3 rounded-lg shadow hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
+                  Analyzing Data...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" /> Generate Insights
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -89,16 +118,8 @@ const AIInsights = () => {
             <Sparkles className="w-5 h-5 text-purple-500" />
             <h3 className="text-lg font-semibold text-slate-800">AI Recommendations Report</h3>
           </div>
-          <div className="p-6 prose prose-indigo max-w-none">
-            {/* Very simple markdown parsing for display */}
-            {insight.split('\n').map((line, i) => {
-              if (line.startsWith('###')) return <h4 key={i} className="text-md font-bold mt-4 mb-2">{line.replace('###', '')}</h4>;
-              if (line.startsWith('##')) return <h3 key={i} className="text-lg font-bold mt-6 mb-3 border-b pb-2">{line.replace('##', '')}</h3>;
-              if (line.startsWith('#')) return <h2 key={i} className="text-xl font-extrabold mt-8 mb-4">{line.replace('#', '')}</h2>;
-              if (line.startsWith('-') || line.startsWith('*')) return <li key={i} className="ml-4">{line.substring(1)}</li>;
-              if (line.trim() === '') return <br key={i} />;
-              return <p key={i} className="mb-2 text-slate-700 leading-relaxed">{line}</p>;
-            })}
+          <div className="p-8 prose prose-indigo max-w-none prose-headings:font-bold prose-h2:text-indigo-700 prose-h3:text-indigo-600 prose-p:text-slate-700 prose-a:text-indigo-600 prose-li:marker:text-indigo-500">
+            <ReactMarkdown>{insight}</ReactMarkdown>
           </div>
         </div>
       )}
