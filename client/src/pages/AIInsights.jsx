@@ -3,6 +3,8 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { BrainCircuit, Sparkles, UserCheck } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 const AIInsights = () => {
   const [employees, setEmployees] = useState([]);
@@ -118,8 +120,13 @@ const AIInsights = () => {
             <Sparkles className="w-5 h-5 text-purple-500" />
             <h3 className="text-lg font-semibold text-slate-800">AI Recommendations Report</h3>
           </div>
-          <div className="p-8 prose prose-indigo max-w-none prose-headings:font-bold prose-h2:text-indigo-700 prose-h3:text-indigo-600 prose-p:text-slate-700 prose-a:text-indigo-600 prose-li:marker:text-indigo-500">
-            <ReactMarkdown>{insight}</ReactMarkdown>
+          <div className="p-8 prose prose-indigo max-w-none prose-headings:font-bold prose-h2:text-indigo-700 prose-h3:text-indigo-600 prose-p:text-slate-700 prose-a:text-indigo-600 prose-li:marker:text-indigo-500 prose-table:border-collapse prose-table:w-full prose-th:bg-indigo-50 prose-th:p-3 prose-th:border prose-th:border-slate-200 prose-td:p-3 prose-td:border prose-td:border-slate-200">
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]} 
+              rehypePlugins={[rehypeRaw]}
+            >
+              {insight}
+            </ReactMarkdown>
           </div>
         </div>
       )}
